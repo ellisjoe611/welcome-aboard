@@ -10,7 +10,7 @@ from app.serializers.user import UserCreateFormSchema, UserLoginFormSchema, User
 from app.serializers.auth_token import AuthTokenSchema
 from app.models.user import User
 from app.models.auth_token import AuthToken
-from app.decorators.user import login_required, master_only
+from app.decorators.user import master_login_required
 
 
 class UserView(FlaskView):
@@ -61,8 +61,7 @@ class UserView(FlaskView):
     @route("/list", methods=["GET"])
     @doc(description="회원 목록 확인", summary="회원 리스트 확인 (임시용)")
     @marshal_with(UserInfoSchema(many=True), code=200, description="사용자 리스트 조회 (임시)")
-    @login_required
-    @master_only
+    @master_login_required
     def list(self, email: Optional[str] = None):
         if email:
             result = User.objects(email=email).all()
