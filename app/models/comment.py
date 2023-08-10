@@ -14,6 +14,8 @@ class Comment(Document):
     created_at = DateTimeField(default=datetime.utcnow())
     is_deleted = BooleanField(default=False)
 
+    meta = {"indexes": ["email", "name"]}
+
     @property
     def like_count(self):
         return len(self.likes)
