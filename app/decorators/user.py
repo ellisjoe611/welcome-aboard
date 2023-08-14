@@ -4,6 +4,7 @@ from functools import wraps
 from flask import request, current_app, g
 
 from app.api import ApiError
+from app.models.user import User
 
 
 def login_required(func):
@@ -11,8 +12,12 @@ def login_required(func):
     def _wrapper(*args, **kwargs):
         do_setup_flask_g()
 
-        # 지정된 함수 실행하기
-        return func(*args, **kwargs)
+        try:
+            return func(*args, **kwargs)
+        except ApiError as e:
+            raise e
+        except Exception as e:
+            raise ApiError(message=str(e), status_code=500)
 
     return _wrapper
 
@@ -22,9 +27,15 @@ def master_login_required(func):
     def _wrapper(*args, **kwargs):
         do_setup_flask_g()
 
-        if g.is_master is not True:
+        if g.user.is_master is not True:
             raise ApiError(message="Not authorized user", status_code=403)
-        return func(*args, **kwargs)
+
+        try:
+            return func(*args, **kwargs)
+        except ApiError as e:
+            raise e
+        except Exception as e:
+            raise ApiError(message=str(e), status_code=500)
 
     return _wrapper
 
@@ -37,4 +48,4 @@ def do_setup_flask_g():
     except (DecodeError, InvalidTokenError):
         raise ApiError(message="Not valid authorization token", status_code=401)
 
-    g.email, g.is_master = payload["email"], payload["is_master"]
+    g.user = User(email=payload["email"], is_master=payload["is_master"])
