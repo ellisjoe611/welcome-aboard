@@ -17,14 +17,26 @@ class Post(Document):
     updated_at = DateTimeField(default=datetime.utcnow())
     is_deleted = BooleanField(default=False)
 
-    meta = {"collection": "post", "indexes": ["created_by"]}
+    meta = {
+        "collection": "post",
+        "indexes": [{"fields": ("created_by", "created_at")}],
+    }
 
     def soft_delete(self):
         if g.user != self.created_by:
             return False
         try:
-            self.update(is_deleted=True)
+            self.update(set__is_deleted=True)
             return True
-        except OperationError as err:
-            print(str(err))
+        except OperationError:
             return False
+
+    def add_tag(self, tag_name: str):
+        try:
+            self.update(push__tags=Tag(name=tag_name, created_by=g.user))
+            return True
+        except OperationError:
+            return False
+
+    def remove_tag(self, tag_name: str):
+        pass
