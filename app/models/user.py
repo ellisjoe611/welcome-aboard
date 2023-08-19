@@ -20,7 +20,7 @@ class User(Document):
 
     meta = {
         "collection": "user",
-        "indexes": [{"fields": ("email", "name")}, {"fields": ("is_master",)}, {"fields": ("is_deleted",)}],
+        "indexes": [{"fields": ("email", "name")}, {"fields": ("is_deleted",)}],
     }
 
     def check_pw(self, password: str) -> bool:
