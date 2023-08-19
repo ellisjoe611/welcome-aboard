@@ -45,7 +45,9 @@ def do_setup_flask_g():
         raise ApiError(message="User login required", status_code=401)
     try:
         payload = jwt.decode(request.headers.get("X-Auth-Token"), key=current_app.config["TOKEN_KEY"], algorithms=[current_app.config["ALGORITHM"]])
+        g.user = User.objects(email=payload["email"], is_deleted=False).first()
+        if not g.user:
+            raise ApiError(message="User not found based on submitted token", status_code=401)
+        print(f"[decorators/user.py] id: {g.user.id} / email: {g.user.email} / is_master: {g.user.is_master} / is_deleted: {g.user.is_deleted}")
     except (DecodeError, InvalidTokenError):
         raise ApiError(message="Not valid authorization token", status_code=401)
-
-    g.user = User(email=payload["email"], is_master=payload["is_master"])
