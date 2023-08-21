@@ -6,6 +6,7 @@ from app.utils.converter import register_path_converter
 from app.views.user import UserView
 from app.views.category import CategoryView
 from app.views.post import PostMasterView, PostDetailView
+from app.views.comment import CommentListView, CommentInfoView
 
 bp: Blueprint = Blueprint("api", __name__)
 
@@ -17,8 +18,10 @@ def register_api(app: Flask):
     # 라우트 등록
     UserView.register(bp, route_base="/user", trailing_slash=False)
     CategoryView.register(bp, route_base="/category", trailing_slash=False)
-    PostMasterView.register(bp, route_base="/post", trailing_slash=False)
-    PostDetailView.register(bp, route_base="/post/<object_id:post_id>", trailing_slash=False)
+    PostMasterView.register(bp, route_base="/posts", trailing_slash=False)
+    PostDetailView.register(bp, route_base="/posts/<object_id:post_id>", trailing_slash=False)
+    CommentListView.register(bp, route_base="/comments", trailing_slash=False)
+    CommentInfoView.register(bp, route_base="/comments/<object_id:comment_id>", trailing_slash=False)
 
     # 블루프린트를 app에 등록
     app.register_blueprint(bp)
