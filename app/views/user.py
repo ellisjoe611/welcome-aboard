@@ -46,9 +46,8 @@ class UserView(FlaskView):
     @marshal_with(ApiStatusSchema, code=401, description="로그인 실패")
     @marshal_with(ApiStatusSchema, code=500, description="처리 도중 오류")
     def login(self, email: str, password: str):
-        user: User = User.objects(email=email, is_deleted=False).first()
-        if not user:
-            raise ApiError(message="존재하지 않는 계정입니다", status_code=401)
+        # 사용자 정보 조회
+        user = User.get_user_info(email=email)
 
         # 비밀번호 해독 & 확인
         if user.check_pw(password=password) is not True:
@@ -60,6 +59,8 @@ class UserView(FlaskView):
     @route("/info", methods=["GET"])
     @doc(description="회원 정보 확인", summary="회원 정보 확인 api")
     @marshal_with(UserInfoSchema, code=200, description="조회 성공")
+    @marshal_with(ApiStatusSchema, code=404, description="조회된 정보 없음")
+    @marshal_with(ApiStatusSchema, code=500, description="조회 실패")
     @login_required
     def info(self):
         return User.get_user_info(email=g.user.email), 200
@@ -68,7 +69,7 @@ class UserView(FlaskView):
     @doc(description="회원 정보 수정", summary="회원 정보 수정 api")
     @use_kwargs(UserUpdateFormSchema)
     @marshal_with(AuthTokenSchema, code=200, description="회원 정보 수정 완료")
-    @marshal_with(ApiStatusSchema, code=401, description="회원 확인 실패")
+    @marshal_with(ApiStatusSchema, code=404, description="회원 확인 실패")
     @marshal_with(ApiStatusSchema, code=422, description="요청 body 확인 필요")
     @marshal_with(ApiStatusSchema, code=500, description="처리 도중 오류")
     @login_required
@@ -76,10 +77,10 @@ class UserView(FlaskView):
         if subscribing is None and not change_pw:
             raise ApiError(message="수정할 데이터가 없습니다.", status_code=422)
 
-        user = User.objects(email=g.user.email, is_deleted=False).first()
-        if not user:
-            raise ApiError(message="존재하지 않는 계정입니다.", status_code=401)
+        # 회원 정보 조회
+        user = User.get_user_info(email=g.user.email)
 
+        # 회원 정보 수정
         user.update_user_info(change_pw=change_pw, password=password, new_password=new_password, subscribing=subscribing)
         return {"message": "회원 정보 수정 완료"}, 200
 
