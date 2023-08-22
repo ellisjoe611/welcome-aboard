@@ -111,9 +111,12 @@ class ReComment(Document):
 
     @classmethod
     def add_re_comment(cls, parent_comment_id_str: str, content: str):
-        parent_comment = Comment.objects(id=ObjectId(parent_comment_id_str), is_deleted=False).first()
-        if not parent_comment:
+        try:
+            parent_comment = Comment.objects.get(id=ObjectId(parent_comment_id_str), is_deleted=False)
+        except DoesNotExist:
             raise ApiError(message="상위 댓글을 찾지 못했습니다.", status_code=404)
+        except MultipleObjectsReturned:
+            raise ApiError(message="상위 댓글 조회 도중 에러가 발생했습니다.", status_code=500)
 
         try:
             cls(parent_comment=parent_comment, content=content, created_by=g.user).save()

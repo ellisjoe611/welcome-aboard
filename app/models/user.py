@@ -1,6 +1,6 @@
 from typing import Optional
 import bcrypt
-from mongoengine import Document, EmailField, StringField, BooleanField, DateTimeField, OperationError, ValidationError
+from mongoengine import Document, EmailField, StringField, BooleanField, DateTimeField, OperationError, ValidationError, DoesNotExist, MultipleObjectsReturned
 from bcrypt import checkpw
 from datetime import datetime
 
@@ -40,9 +40,11 @@ class User(Document):
     @classmethod
     def get_user_info(cls, email: str):
         try:
-            return cls.objects(email=email, is_deleted=False).first()
-        except Exception as e:
-            raise ApiError(message=str(e), status_code=500)
+            return cls.objects.get(email=email, is_deleted=False)
+        except DoesNotExist:
+            raise ApiError(message="존재하지 않는 계정입니다.", status_code=404)
+        except MultipleObjectsReturned:
+            raise ApiError(message="계정 조회 도중 에러가 발생했습니다.", status_code=500)
 
     def update_user_info(self, change_pw: bool, password: Optional[str] = None, new_password: Optional[str] = None, subscribing: Optional[bool] = None):
         if change_pw is True:
